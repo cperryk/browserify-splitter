@@ -1,0 +1,18 @@
+{
+  "name": "browserify-splitter",
+  "version": "0.0.1",
+  "description": "Split a Browserify file into separate files that can be arbitrarily concatenated.\"",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "browserify"
+  ],
+  "author": "Chris Kirk",
+  "license": "ISC",
+  "dependencies": {
+    "fs-extra": "^2.1.2",
+    "through2": "^2.0.3"
+  }
+}
