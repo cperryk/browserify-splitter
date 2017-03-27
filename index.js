@@ -7,7 +7,7 @@ const path = require('path'),
 /**
  * Collects the IDs of a stream of module-dependencies
  * and adds them to the given array.
- * @param  {String[]} arr
+ * @param  {string[]} arr
  * @return {Object} - A stream
  */
 function collectIds(arr) {
@@ -21,9 +21,10 @@ function collectIds(arr) {
  * Write out all the pieces of a browser-pack stream to
  * individual files such that any modules can be concatenated
  * arbitrarily.
- * @param  {String} dest - Destination path
- * @param  {String[]} ids - An array of dependency IDs
- * @return {Object} - A stream
+ * @param  {Object} opts
+ * @param  {string} opts.dest Destination path
+ * @param  {string[]} ids An array of dependency IDs
+ * @return {Object} A stream
  */
 function splitBundle(opts, ids) {
   let chunkIndex = 0,
@@ -34,7 +35,7 @@ function splitBundle(opts, ids) {
   opts = opts || {};
   outDir = opts.writeToDir || './';
 
-  const pipe = through.obj(function (row, enc, next) {
+  return through.obj(function (row, enc, next) {
 
     // The first two chunks are not modules
     if (chunkIndex < 2) {
@@ -53,9 +54,8 @@ function splitBundle(opts, ids) {
     }
     chunkIndex ++;
     next();
-  });
-
-  pipe.on('end', ()=>{
+  })
+  .on('end', ()=>{
     // Add an empty module at the beginning to ensure that the starting comma of
     // any real module does not cause a syntax error
     prelude += '0:[]';
@@ -65,8 +65,6 @@ function splitBundle(opts, ids) {
     fs.writeFile(path.join(outDir, 'prelude.js'), Buffer.from(prelude));
     fs.writeFile(path.join(outDir, 'postlude.js'), Buffer.from(postlude));
   });
-
-  return pipe;
 }
 
 /**
@@ -76,9 +74,9 @@ function splitBundle(opts, ids) {
  * - A "prelude.js" file that must appear before any modules
  * - One module JS file for each module in the bundle, named according to the module ID
  * - A "postlude.js" file that must appear after any modules
- * @param  {Object} b - A bundle
+ * @param  {Object} b - A Browserify.bundle()
  * @param  {Object} opts - Plugin options
- * @param  {String} opts.writeToDir - Path to directory to which files will be written
+ * @param  {string} opts.writeToDir - Path to directory to which files will be written
  */
 module.exports = function splitterPlugin(b, opts) {
   const ids = [];
