@@ -27,13 +27,11 @@ function collectIds(arr) {
  * @return {Object} A stream
  */
 function splitBundle(opts, ids) {
+  const conf = opts || {},
+    outDir = conf.writeToDir || './';
   let chunkIndex = 0,
     prelude = '',
-    postlude = '',
-    outDir;
-
-  opts = opts || {};
-  outDir = opts.writeToDir || './';
+    postlude = '';
 
   return through.obj(function (row, enc, next) {
 
@@ -59,9 +57,7 @@ function splitBundle(opts, ids) {
     // Add an empty module at the beginning to ensure that the starting comma of
     // any real module does not cause a syntax error
     prelude += '0:[]';
-
     postlude += ';';
-
     fs.writeFile(path.join(outDir, 'prelude.js'), Buffer.from(prelude));
     fs.writeFile(path.join(outDir, 'postlude.js'), Buffer.from(postlude));
   });
