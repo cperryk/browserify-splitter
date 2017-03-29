@@ -1,6 +1,6 @@
 {
   "name": "browserify-splitter",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Split a Browserify file into separate files that can be arbitrarily concatenated.\"",
   "main": "index.js",
   "scripts": {},
