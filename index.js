@@ -77,9 +77,11 @@ function splitBundle(opts, modules) {
  */
 function fileWriter(outDir, log) {
   return (outfile, data, label) => {
-    fs.writeFileSync(path.join(outDir, outfile), data);
+    const outpath = path.join(outDir, outfile);
+
+    fs.writeFileSync(outpath, data);
     if (log) {
-      console.log(`written: ${label} => ${outfile}`);
+      console.log(`written: ${label} => ${outpath}`);
     }
   };
 }
