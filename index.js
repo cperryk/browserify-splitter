@@ -7,12 +7,15 @@ const path = require('path'),
 /**
  * Collects the IDs of a stream of module-dependencies
  * and adds them to the given array.
- * @param  {string[]} arr
- * @return {Object} - A stream
+ * @param  {Object[]} arr
+ * @return {Object} A stream
  */
-function collectIds(arr) {
+function collectModules(arr) {
   return through.obj(function (row, enc, next) {
-    arr.push(row.id);
+    arr.push({
+      id: row.id,
+      file: row.file
+    });
     next(null, row);
   });
 }
@@ -22,13 +25,13 @@ function collectIds(arr) {
  * individual files such that any modules can be concatenated
  * arbitrarily.
  * @param  {Object} opts
- * @param  {string} opts.dest Destination path
- * @param  {string[]} ids An array of dependency IDs
+ * @param  {string} opts.writeToDir Destination path
+ * @param  {Object[]} modules An array of module data
  * @return {Object} A stream
  */
-function splitBundle(opts, ids) {
+function splitBundle(opts, modules) {
   const conf = opts || {},
-    outDir = conf.writeToDir || './';
+    outputFile = fileWriter(conf.writeToDir || './', conf.verbose);
   let chunkIndex = 0,
     prelude = '',
     postlude = '';
@@ -40,16 +43,19 @@ function splitBundle(opts, ids) {
       prelude += row.toString();
 
     // Additional chunks wrap up the bundle
-    } else if (chunkIndex - 2 >= ids.length) {
+    } else if (chunkIndex - 2 >= modules.length) {
       postlude += row.toString();
 
     } else {
+      const module = modules[chunkIndex - 2];
+
       // Ensure that the first module in the pack has a comma like the others.
       if (chunkIndex === 2) {
         row = Buffer.from(',' + row.toString());
       }
-      fs.outputFile(path.join(outDir, ids[chunkIndex - 2] + '.js'), row);
+      outputFile(module.id + '.js', row, module.file);
     }
+
     chunkIndex ++;
     next();
   })
@@ -58,25 +64,44 @@ function splitBundle(opts, ids) {
     // any real module does not cause a syntax error
     prelude += '0:[]';
     postlude += ';';
-    fs.writeFile(path.join(outDir, 'prelude.js'), Buffer.from(prelude));
-    fs.writeFile(path.join(outDir, 'postlude.js'), Buffer.from(postlude));
+    outputFile('prelude.js', Buffer.from(prelude), '(prelude)');
+    outputFile('postlude.js', Buffer.from(postlude), '(postlude)');
   });
 }
 
 /**
- * A Browserify plugin that will write out the chunks of a bundle to individual
- * files in such a way that any modules can be concatenated arbitrarily together.
- * Writes these files:
+ * Returns a function that writes a file synchronously and logs it.
+ * @param {string} outDir
+ * @param {boolean} [log] If true, logs writes
+ * @return {function}
+ */
+function fileWriter(outDir, log) {
+  return (outfile, data, label) => {
+    fs.writeFileSync(path.join(outDir, outfile), data);
+    if (log) {
+      console.log(`written: ${label} => ${outfile}`);
+    }
+  };
+}
+
+/**
+ * Browserify plugin. Writes bundle chunks to files such that any
+ * modules can be concatenated arbitrarily. Writes these files:
  * - A "prelude.js" file that must appear before any modules
  * - One module JS file for each module in the bundle, named according to the module ID
  * - A "postlude.js" file that must appear after any modules
- * @param  {Object} b - A Browserify.bundle()
- * @param  {Object} opts - Plugin options
- * @param  {string} opts.writeToDir - Path to directory to which files will be written
+ * @param  {Object} b A Browserify() instance
+ * @param  {Object} opts Plugin options
+ * @param  {string} opts.writeToDir Path to directory to which files will be written
+ * @param  {boolean} [verbose] Log writes
  */
 module.exports = function splitterPlugin(b, opts) {
-  const ids = [];
+  const modules = [];
 
-  b.pipeline.get('emit-deps').push(collectIds(ids));
-  b.pipeline.get('pack').push(splitBundle(opts, ids));
+  if (typeof opts.writeToDir !== 'string') {
+    throw new Error('Browserify-splitter requires the "writeToDir" option to be set');
+  }
+
+  b.pipeline.get('emit-deps').push(collectModules(modules));
+  b.pipeline.get('pack').push(splitBundle(opts, modules));
 };

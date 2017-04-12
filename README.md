@@ -2,6 +2,8 @@
 
 Browserify-splitter is a Browserify plugin that allows you to split a bundle into separate files in such a way that module files can be concatenated arbtrarily.
 
+This is currently in development. Use with caution!
+
 ## Installation
 `npm install browserify-splitter --save`
 
@@ -40,6 +42,11 @@ This will write the five following files to `public/js`:
 * `postlude.js` - Javascript that ends the bundle.
 
 You could generate the entire bundle by concatenating all of these files together. If you didn't need `b.js`, you could leave it out, and the resulting bundle will still be valid. You can include or exclude any modules from the bundle as long as you include `prelude` at the beginning and `postlude` at the end.
+
+## Plugin Configuration
+
+* `writeToDir`: Required. String.
+* `verbose`: Boolean. Log all file writes. Defaults to `false`.
 
 ## What's this for?
 
