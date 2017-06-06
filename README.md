@@ -1,6 +1,6 @@
 # browserify-splitter
 
-Browserify-splitter is a Browserify plugin that allows you to split a bundle into separate files in such a way that module files can be concatenated arbtrarily.
+A Browserify plugin that allows you to split a bundle into separate files in such a way that module files can be concatenated arbitrarily.
 
 This is currently in development. Use with caution!
 
@@ -52,8 +52,12 @@ You could generate the entire bundle by concatenating all of these files togethe
 
 Oftentimes, developers use Browserify to precompile client JS during a build step. However, what happens when you don't know what the client needs until runtime? You have a few options:
 
-* Include all the JS the client possibly needs, though this may result in huge bundles.
-* Bundle only modules we know the client needs, and have the client fetch other JS as needed via async requests, though this could mean dozens of async requests.
-* Bundle on-the-fly, on request. Under many circumstances, this may not be performant, especially if you're transpiling or making other transformations.
+* Include all the JS the client _could_ need, though this may result in huge bundles.
+* Bundle only modules we know the client usually needs, and have the client fetch other JS as needed via async requests, though this could mean dozens of async requests.
+* Bundle at runtime, on request, though this is not performant, especially if you're transpiling, uglifying, or making other transformations.
 
 Browserify-splitter lets you leave all the costly parts of bundle generation -- JS parsing, dependency tracing, transpiling, and transforming -- to the build step, and reap the benefits of on-the-fly bundling without sacrificing performance. By combining the plugin with [browserify-extract-registy](https://github.com/cperryk/browserify-extract-registry), you can export the dependency registry during your build and use it at runtime to compute dependencies based on the user's request, concatenate the appropriate modules, and give this dynamically generated bundle to the user.
+
+## Similar packages
+
+* [browserify-deoptimizer](https://www.npmjs.com/package/browserify-deoptimizer)
